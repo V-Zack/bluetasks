@@ -13,11 +13,21 @@ class TaskForm extends Component {
                 description: "",
                 WhenToDo: ""
             },
-            redirect: false
+            redirect: false,
+            buttonName: "Cadastrar"
         }
 
         this.onSubmitHandler = this.onSubmitHandler.bind(this);
         this.onInputChangeHandler = this.onInputChangeHandler.bind(this);
+    }
+
+    componentDidMount(){
+        const editId = this.props.match.params.id;
+        if (editId){
+            const task = TaskService.load(~~editId);
+            this.setState({task: task, buttonName: "Alterar"});
+
+        }
     }
     
     onSubmitHandler( event ){
@@ -49,6 +59,7 @@ class TaskForm extends Component {
                         <input type="text"
                             className="form-control"
                             name="description"
+                            value={this.state.task.description}
                             placeholder="Digite a descrição"
                             onChange={this.onInputChangeHandler}
                             />
@@ -58,14 +69,20 @@ class TaskForm extends Component {
                         <input type="date"
                             className="form-control"
                             name="whenToDo"
+                            value={this.state.task.WhenToDo}
                             placeholder="Informe a data"
                             onChange={this.onInputChangeHandler}
                             />
                     </div>
                     <br/>
-                    <button type="submit" className="btn btn-primary">Cadastrar</button>
+                    <button type="submit" className="btn btn-primary">{this.state.buttonName}</button>
                     &nbsp;&nbsp;
-                    <button type="button" className="btn btn-primary">Cancelar</button>
+                    <button 
+                        type="button" 
+                        className="btn btn-primary"
+                        onClick={() => this.setState({ redirect: true })}>
+                            Cancelar
+                        </button>
                     
                 </form>
 

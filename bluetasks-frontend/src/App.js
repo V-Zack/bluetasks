@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Switch, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import TaskForm from './components/TaskForm';
 import TaskListTable from './components/TaskListTable';
@@ -15,14 +15,12 @@ class App extends Component {
         <div className="App">
           <NavBar />
           <div className="container" style={{ marginTop: 20 }}>
-            <Routes>
-              <Route exact path="/form" element={<TaskForm/>} />
-              <Route path="/" element={<TaskListTable/>} />
-
-            </Routes>
-
+            <Switch>
+              <Route exact path="/form" component={TaskForm} />
+              <Route exact path="/form/:id" component={TaskForm} />
+              <Route path="/" component={TaskListTable} />
+            </Switch>
           </div>
-
         </div>
       </BrowserRouter>
     );
@@ -30,4 +28,3 @@ class App extends Component {
 }
 
 export default App;
-
