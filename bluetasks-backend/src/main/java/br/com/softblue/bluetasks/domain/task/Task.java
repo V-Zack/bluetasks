@@ -3,6 +3,7 @@ package br.com.softblue.bluetasks.domain.task;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -13,9 +14,12 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Length;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import br.com.softblue.bluetasks.domain.user.AppUser;
 
 @Entity
+@EntityListeners(TaskListener.class)
 public class Task {
 
 	@Id
@@ -23,7 +27,7 @@ public class Task {
 	private Integer id;
 	
 	@NotEmpty(message = "A descrição da tarefa é obrigatória")
-	@Length(min = 3, max = 40, message = "O tamanho da tarefa é inválido")
+	@Length(min = 3, max = 60, message = "O tamanho da tarefa é inválido")
 	private String description;
 	
 	@NotNull(message = "A data da tarefa é obrogatória")
@@ -36,7 +40,7 @@ public class Task {
 	
 	@ManyToOne
 	@JoinColumn(name = "app_user_id")
-	//@NotNull(message = "O usuário da tarefa é obrigatório")
+	@JsonIgnore
 	private AppUser appUser;
 	
 	public Task() {
