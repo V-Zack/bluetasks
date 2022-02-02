@@ -3,7 +3,10 @@ import { toast, ToastContainer } from 'react-toastify';
 import TaskService from '../api/TaskService';
 import "react-toastify/dist/ReactToastify.css";
 import { Redirect } from 'react-router-dom';
+import AuthService from '../api/AuthService';
+import Spinner from './Spinner';
 import Alert from './Alert';
+import Moment from 'react-moment';
 
 
 class TaskListTable extends Component {
@@ -12,7 +15,9 @@ class TaskListTable extends Component {
 
         this.state = {
             tasks: [],
-            editId: 0
+            editId: 0,
+            loading: false,
+            alert: null
         };
         this.onDeleteHandler = this.onDeleteHandler.bind(this);
         this.onStatusChangeHandler = this.onStatusChangeHandler.bind(this);
@@ -24,17 +29,30 @@ class TaskListTable extends Component {
     }
 
     listTasks() {
-        this.setState({ tasks: TaskService.list() });
+        if(!AuthService.isAuthenticated()){
+            return;
+        }
 
+        this.setState({loading: true});
+        TaskService.list(
+            tasks => this.setState({ tasks: tasks, loading: false}),
+            error => this.setErrorState(error)
+        );
+    }
+
+    setErrorState(error){
+       this.setState({ alert: `Erro na requisição: ${error.message}`, loading: false })        
     }
 
     onDeleteHandler(id) {
         if (window.confirm("Deseja excluir esta tarefa?")) {
-            TaskService.delete(id);
-            this.listTasks();
-            toast.success("A tarefa foi excluída!", { position: toast.POSITION.BOTTOM_LEFT })
+            TaskService.delete(id,
+                () => {
+                    this.listTasks();
+                    toast.success("A tarefa foi excluída!", { position: toast.POSITION.BOTTOM_LEFT });
+                },
+                error => this.setErrorState(error));
         }
-
     }
 
     onEditHandler(id){
@@ -43,22 +61,34 @@ class TaskListTable extends Component {
 
     onStatusChangeHandler(task){
         task.done = !task.done;
-        TaskService.save(task);
-        this.listTasks();
+
+        TaskService.save(task,
+            () => {
+                const tasks = this.state.tasks.map(t => t.id !== task.id ? t : task);
+                this.setState({ tasks: tasks });
+            },              
+            (error => this.setErrorState(error)));
     }
 
     render() {
-        if(this.state.editId > 0 ){
-            return <Redirect to= {`/form/${this.state.editId}`} />
 
+        if(!AuthService.isAuthenticated()){
+            return <Redirect to="/login" />
         }
 
-
+        if(this.state.editId > 0 ){
+            return <Redirect to={`/form/${this.state.editId}`} />
+        }
+        
+        
         return (
             <>
-                <Alert message="Este é um alerta de teste"/>     
+                <h1>Lista de Tarefas</h1>
+                { this.state.alert != null ? <Alert message={this.state.alert} /> : "" }
+                { this.state.loading ? <Spinner /> :    
                 <table className="table table-striped">
                     <TableHeader />
+                    
                     {this.state.tasks.length > 0 ?
                         <TableBody
                             tasks={this.state.tasks}
@@ -69,7 +99,8 @@ class TaskListTable extends Component {
                         <EmptyTableBody />
                         }
 
-                </table>
+                </table> 
+                }
                 <ToastContainer autoClose={1500} />
             </>
         );
@@ -104,7 +135,10 @@ const TableBody = (props) => {
                         /> 
                     </td>
                     <td> {task.done ? <s>{task.description}</s> : task.description } </td>
-                    <td> {task.done ? <s>{task.whenToDo}</s> : task.whenToDo } </td>
+                    <td> {task.done ? <s><Moment format="DD/MM/YYYY">{task.whenToDo}</Moment></s>
+                         : <Moment format="DD/MM/YYYY">{task.whenToDo}</Moment> 
+                         }
+                        </td>
                     <td>
                         <input 
                             type="button" 
